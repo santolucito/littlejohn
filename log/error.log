@@ -1,0 +1,21 @@
+[23/Dec/2014:11:15:47 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:16:08:13 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:16:08:44 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:16:10:33 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:17:16:14 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:17:21:27 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:17:53:01 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:17:54:29 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:17:54:52 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:19:48:33 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:19:49:51 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:20:03:15 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:20:05:38 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:20:13:40 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:20:27:16 -0500] Server.httpServe: START, binding to [http://0.0.0.0:8000/]
+[23/Dec/2014:20:27:18 -0500] Server.httpServe: SHUTDOWN
+[23/Dec/2014:20:27:18 -0500] Server.httpServe: BACKEND STOPPED
+[23/Dec/2014:20:27:38 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:20:47:19 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[23/Dec/2014:21:21:38 -0500] ["24.206.147.233"]: an exception escaped to toplevel:
+recv: resource vanished (Connection reset by peer)
