@@ -7,6 +7,13 @@
   (major1) == 0 && (major2) <  3 || \
   (major1) == 0 && (major2) == 3 && (minor) <= 1)
 
+/* package aeson-0.7.0.4 */
+#define VERSION_aeson "0.7.0.4"
+#define MIN_VERSION_aeson(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  7 || \
+  (major1) == 0 && (major2) == 7 && (minor) <= 0)
+
 /* package base-4.6.0.1 */
 #define VERSION_base "4.6.0.1"
 #define MIN_VERSION_base(major1,major2,minor) (\
@@ -20,6 +27,20 @@
   (major1) <  0 || \
   (major1) == 0 && (major2) <  10 || \
   (major1) == 0 && (major2) == 10 && (minor) <= 0)
+
+/* package either-4.3.2.1 */
+#define VERSION_either "4.3.2.1"
+#define MIN_VERSION_either(major1,major2,minor) (\
+  (major1) <  4 || \
+  (major1) == 4 && (major2) <  3 || \
+  (major1) == 4 && (major2) == 3 && (minor) <= 2)
+
+/* package errors-1.4.7 */
+#define VERSION_errors "1.4.7"
+#define MIN_VERSION_errors(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  4 || \
+  (major1) == 1 && (major2) == 4 && (minor) <= 7)
 
 /* package heist-0.14.0.1 */
 #define VERSION_heist "0.14.0.1"
@@ -83,6 +104,20 @@
   (major1) <  0 || \
   (major1) == 0 && (major2) <  9 || \
   (major1) == 0 && (major2) == 9 && (minor) <= 4)
+
+/* package snaplet-sqlite-simple-0.4.8.2 */
+#define VERSION_snaplet_sqlite_simple "0.4.8.2"
+#define MIN_VERSION_snaplet_sqlite_simple(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  4 || \
+  (major1) == 0 && (major2) == 4 && (minor) <= 8)
+
+/* package sqlite-simple-0.4.8.0 */
+#define VERSION_sqlite_simple "0.4.8.0"
+#define MIN_VERSION_sqlite_simple(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  4 || \
+  (major1) == 0 && (major2) == 4 && (minor) <= 8)
 
 /* package text-0.11.3.1 */
 #define VERSION_text "0.11.3.1"
