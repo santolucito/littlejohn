@@ -19,3 +19,13 @@
 [23/Dec/2014:20:47:19 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
 [23/Dec/2014:21:21:38 -0500] ["24.206.147.233"]: an exception escaped to toplevel:
 recv: resource vanished (Connection reset by peer)
+[24/Dec/2014:08:21:43 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[24/Dec/2014:08:48:19 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[24/Dec/2014:22:10:21 -0500] ["186.32.5.180"]: an exception escaped to toplevel:
+recv: resource vanished (Connection reset by peer)
+[26/Dec/2014:08:09:27 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[26/Dec/2014:09:02:22 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[26/Dec/2014:09:08:30 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[26/Dec/2014:09:51:10 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[26/Dec/2014:10:17:41 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]
+[26/Dec/2014:11:41:44 -0500] Server.httpServe: START, binding to [http://0.0.0.0:80/]

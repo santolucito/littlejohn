@@ -2,44 +2,42 @@
 
 module Db (
     User(..)
-  , Todo(..)
   , createTables
-  , saveTodo
-  , listTodos) where
+  , saveStock
+  , listStocks) where
 
 import           Control.Applicative
 import           Control.Monad
 import           Data.Aeson
 import           Data.Int (Int64)
 import           Data.Maybe
+import           Data.Text (Text)
 import qualified Data.Text as T
 import           Database.SQLite.Simple
+import           Stock
 
-data User = User Int T.Text
+data User = User Int Text
+--maybe have a stock database entry version?
+--this version includes all the right data/formats
+--data StockDBE = StockDBE Maybe Int64 Stock
 
-data Todo =
-  Todo
-  { todoId :: Maybe Int64
-  , todoText :: T.Text
-  , todoDone :: Bool
-  } deriving (Show)
 
-instance FromJSON Todo where
+instance FromJSON Stock where
   parseJSON (Object v) =
-    Todo <$> optional (v .: "id")
-         <*> v .: "text"
-         <*> v .: "done"
+    Stock <$> optional (v .: "id")
+          <*> v .: "number"
+          <*> v .: "ticker"
   parseJSON _ = mzero
 
-instance ToJSON Todo where
-  toJSON (Todo i text done) =
+instance ToJSON Stock where
+  toJSON (Stock i number ticker) =
     object [ "id" .= fromJust i
-           , "text" .= text
-           , "done" .= done
+           , "number" .= number
+           , "ticker" .= ticker
            ]
 
-instance FromRow Todo where
-  fromRow = Todo <$> field <*> field <*> field
+instance FromRow Stock where
+  fromRow = Stock <$> field <*> field <*> field
 
 tableExists :: Connection -> String -> IO Bool
 tableExists conn tblName = do
@@ -54,34 +52,34 @@ createTables conn = do
   -- Note: for a bigger app, you probably want to create a 'version'
   -- table too and use it to keep track of schema version and
   -- implement your schema upgrade procedure here.
-  schemaCreated <- tableExists conn "todos"
+  schemaCreated <- tableExists conn "stocks"
   unless schemaCreated $
     execute_ conn
       (Query $
-       T.concat [ "CREATE TABLE todos ("
+       T.concat [ "CREATE TABLE stocks ("
                 , "id INTEGER PRIMARY KEY, "
                 , "user_id INTEGER NOT NULL, "
                 , "saved_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, "
-                , "text TEXT, "
-                , "done BOOLEAN)"])
+                , "number TEXT, "--TODO change to INTEGER NOT NULL
+                , "ticker TEXT)"])
 
 -- | Retrieve a user's list of comments
-listTodos :: Connection -> User -> IO [Todo]
-listTodos conn (User uid _) =
-  query conn "SELECT id,text,done FROM todos WHERE user_id = ?" (Only uid)
+listStocks :: Connection -> User -> IO [Stock]
+listStocks conn (User uid _) =
+  query conn "SELECT id,number,ticker FROM stocks WHERE user_id = ?" (Only uid)
 
--- | Save or update a todo
-saveTodo :: Connection -> User -> Todo -> IO Todo
-saveTodo conn (User uid _) t =
-  maybe newTodo updateTodo (todoId t)
+-- | Save or update a stock
+saveStock :: Connection -> User -> Stock -> IO Stock
+saveStock conn (User uid _) t =
+  maybe newStock updateStock (stockId t)
   where
-    newTodo = do
-      execute conn "INSERT INTO todos (user_id,text,done) VALUES (?,?,?)"
-        (uid, todoText t, todoDone t)
+    newStock = do
+      execute conn "INSERT INTO stocks (user_id,number,ticker) VALUES (?,?,?)"
+        (uid, number t, ticker t)
       rowId <- lastInsertRowId conn
-      return $ t { todoId = Just rowId }
+      return $ t { stockId = Just rowId }
 
-    updateTodo tid = do
-      execute conn "UPDATE todos SET text = ?, done = ? WHERE (user_id = ? AND id = ?)"
-        (todoText t, todoDone t, uid, tid)
+    updateStock tid = do
+      execute conn "UPDATE stocks SET number = ?, ticker = ? WHERE (user_id = ? AND id = ?)"
+        (number t, ticker t, uid, tid)
       return t

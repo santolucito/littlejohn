@@ -6,24 +6,23 @@ import           Heist
 import qualified Heist.Compiled as C
 import           Data.Text (Text)
 import           System.IO.Unsafe 
+import           Data.Int (Int64)
 
-
+---------------------------------------
 import           StockPrices
-
+---------------------------------------
 
 data Stock = Stock {
+    stockId :: Maybe Int64,
     number :: Text,
     ticker :: Text
-}
-
-
-
+} deriving Show
 
 
 --this is where a database call could go
 stocksRuntime :: Monad n => RuntimeSplice n [Stock]
-stocksRuntime = return [  Stock "10" "APPL"
-                        , Stock "20" "GOOG"
+stocksRuntime = return [  Stock (Just 1) "10" "APPL"
+                        , Stock (Just 2) "20" "GOOG"
                         ]
 
 splicesFromStock :: Monad n => Splices (RuntimeSplice n Stock -> C.Splice n)

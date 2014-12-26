@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
 ------------------------------------------------------------------------------
 -- | This module is where all the routes and handlers are defined for your
@@ -10,13 +10,19 @@ module Site
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
+import           Control.Lens ((^#))
 import           Control.Concurrent (withMVar)
 import           Control.Monad.Trans (liftIO, lift)
 import           Control.Monad.Trans.Either
 import           Control.Error.Safe (tryJust)
-import           Control.Lens ((^#))
+import           Lens.Family                ((&), (.~))
 import           Data.ByteString (ByteString)
 import qualified Data.Text as T
+import qualified Data.Text.Read as T
+import           Data.Monoid
+------------------------------------------------------------------------------
+
+import           Database.SQLite.Simple as S
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
@@ -24,18 +30,18 @@ import           Snap.Snaplet.Auth.Backends.SqliteSimple
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Snaplet.SqliteSimple
-import           Database.SQLite.Simple as S
 import           Snap.Util.FileServe
 import           Heist
 import qualified Heist.Interpreted as I
-import           Data.Monoid
-import           Lens.Family                ((&), (.~))
-
 ------------------------------------------------------------------------------
+
 import           Application
 import           Stock
 import qualified Db
+import           Util
 ------------------------------------------------------------------------------
+
+type H = Handler App App
 
 -- | Render login form
 handleLogin :: Maybe T.Text -> Handler App (AuthManager App) ()
@@ -47,41 +53,88 @@ handleLogin authError = heistLocal (I.bindSplices errs) $ render "login"
 
 ------------------------------------------------------------------------------
 -- | Handle login submit
-handleLoginSubmit :: Handler App (AuthManager App) ()
+handleLoginSubmit :: H ()
 handleLoginSubmit =
-    loginUser "login" "password" Nothing
-              (\_ -> handleLogin err) (redirect "/stocks")
-  where
-    err = Just "Unknown user or password"
-
+  with auth $ loginUser "login" "password" Nothing
+    (\_ -> handleLogin . Just $ "Unknown login or incorrect password")
+    (redirect "/stocks")
 
 ------------------------------------------------------------------------------
 -- | Logs out and redirects the user to the site index.
-handleLogout :: Handler App (AuthManager App) ()
-handleLogout = logout >> redirect "/"
-
+handleLogout :: H ()
+handleLogout = with auth logout >> redirect "/"
 
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
-handleNewUser :: Handler App (AuthManager App) ()
-handleNewUser = method GET handleForm <|> method POST handleFormSubmit
+
+handleNewUser :: H ()
+handleNewUser =
+  method GET (renderNewUserForm Nothing) <|> method POST handleFormSubmit
   where
-    handleForm = render "new_user"
-    handleFormSubmit = registerUser "login" "password" >> redirect "/"
+    handleFormSubmit = do
+      authUser <- with auth $ registerUser "login" "password"
+      either (renderNewUserForm . Just) login authUser
+
+    renderNewUserForm (err :: Maybe AuthFailure) =
+      heistLocal (I.bindSplices errs) $ render "new_user"
+      where
+        errs = maybe noSplices splice err
+        splice e = "newUserError" ## I.textSplice . T.pack . show $ e
+
+    login user =
+      logRunEitherT $
+        lift (with auth (forceLogin user) >> redirect "/")
+
+-----------------------------------------------------------------------------
+-- | Run actions with a logged in user or go back to the login screen
+withLoggedInUser :: (Db.User -> H ()) -> H ()
+withLoggedInUser action =
+  with auth currentUser >>= go
+  where
+    go Nothing  =
+      with auth $ handleLogin (Just "Must be logged in to view the main page")
+    go (Just u) = logRunEitherT $ do
+      uid  <- tryJust "withLoggedInUser: missing uid" (userId u)
+      uid' <- hoistEither (reader T.decimal (unUid uid))
+      return $ action (Db.User uid' (userLogin u))
+
+-------------------------------------------------------------------------------
+-- | Run an IO action with an SQLite connection
+withDb :: (S.Connection -> IO a) -> H a
+withDb action =
+  withTop db . withSqlite $ \conn -> action conn
+
+handleStocks :: H ()
+handleStocks =
+  method GET  (withLoggedInUser getStocks) <|>
+  method POST (withLoggedInUser saveStock)
+  where
+    getStocks user = do
+      stocks <- withDb $ \conn -> Db.listStocks conn user
+      writeJSON stocks
+      cRender "stocks"
+
+    saveStock user = do
+      newStock <- getJSON
+      either (const $ return ()) persist newStock
+        where
+          persist stock = do
+            savedStock <- withDb $ \conn -> Db.saveStock conn user stock
+            writeJSON savedStock
 
 
 ------------------------------------------------------------------------------
 -- | Handle stocks
-handleStock :: Handler App (AuthManager App) ()
+handleStock :: H ()
 handleStock =  cRender "stocks"
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
-routes = [ ("/login",    with auth handleLoginSubmit)
-         , ("/logout",   with auth handleLogout)
-         , ("/new_user", with auth handleNewUser)
-         , ("/stocks",   with auth handleStock)
+routes = [ ("/login",    handleLoginSubmit)
+         , ("/logout",   handleLogout)
+         , ("/new_user", handleNewUser)
+         , ("/stocks",   handleStocks)
          , ("",          serveDirectory "static")
          ]
 
@@ -91,18 +144,12 @@ routes = [ ("/login",    with auth handleLoginSubmit)
 app :: SnapletInit App App
 app = makeSnaplet "app" "A snaplet example application." Nothing $ do
     h <- nestSnaplet "" heist $ heistInit "templates"
+    addRoutes routes
     addConfig h (mempty & scCompiledSplices .~  allStockSplices)
+    
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
-
-    -- NOTE: We're using initJsonFileAuthManager here because it's easy and
-    -- doesn't require any kind of database server to run.  In practice,
-    -- you'll probably want to change this to a more robust auth backend.
-    --a <- nestSnaplet "auth" auth $
-    --       initJsonFileAuthManager defAuthSettings sess "users.json"
-    
-    -- Initialize auth that's backed by an sqlite database
     d <- nestSnaplet "db" db sqliteInit
     a <- nestSnaplet "auth" auth $ initSqliteAuth sess d
 
@@ -111,7 +158,6 @@ app = makeSnaplet "app" "A snaplet example application." Nothing $ do
     let conn = sqliteConn $ d ^# snapletValue
     liftIO $ withMVar conn $ Db.createTables
 
-    addRoutes routes
     addAuthSplices h auth
     return $ App h s d a
 

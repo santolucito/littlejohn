@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 ------------------------------------------------------------------------------
 -- | This module defines our application's state type and an alias for its
@@ -27,6 +29,7 @@ makeLenses ''App
 
 instance HasHeist App where
     heistLens = subSnaplet heist
+
 
 instance HasSqlite (Handler b App) where
     getSqliteState = with db get
